@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script>
+    var portfolios;
+    /* read portfolios stock lists from file monitor.json */
+    $(document).ready(function(){
+      $.getJSON("monitor.json", function(data){
+        portfolios=data; 
+        var index = 1;            
+        for (var portfolio in portfolios) {
+          var tabbutton = document.createElement("button");
+          tabbutton.className = "tablinks";
+          tabbutton.id = portfolio + "Button";
+          tabbutton.innerHTML = portfolio;
+          $("#TopTab").append(tabbutton);
+          tabbutton.onclick = function(){ openPortfolio(event, this)};
+
+          /*by default, load the first portfolio charts*/
+          if (index == 1) {
+            openPortfolio(event,document.getElementById(portfolio + "Button"));
+          }
+          index ++;
+        }
+      });
+    });
+    function openPortfolio(evt, currentEL) {
+      var i, tabcontent, tablinks;
+      tablinks = document.getElementsByClassName("tablinks");
+
+      /* remove css active from all tabs */
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+
+      /*remove current stock list table rows; which will be replaced*/
+      stocktable = document.getElementById("StockTable");
+      for(var i = stocktable.rows.length - 1; i > 0; i--) {
+        stocktable.deleteRow(i);
+      }
+
+      //add css active to current tab
+      evt.currentTarget.className += " active";
+      portfolio=currentEL.innerHTML;
+      createChart(portfolio);
+    }
+
+    function createChart(portName) {
+      var myNode = document.getElementById("Portfolio");
+      while (myNode.firstChild) {
+        myNode.removeChild(myNode.firstChild);
+      }
+      var portList = portfolios[portName];
+      for ( var i=0; i< portList.length; i++) {
+        var sym = portList[i];
+
+        /*for symbol like $WTIC, replace $ with _, due to file name restrictions on linux*/
+        var symconvert = sym.replace("$", "_");
+        var imgdiv = document.createElement("DIV");
+        imgdiv.style.cssFloat = "left";
+        var img = document.createElement("IMG");
+        img.src = "img/" + symconvert + ".png";
+        img.height = "500";
+        img.width = "500";
+
+        /* for symbols like REI/UN.TO, replace / with %2F for URL processing*/
+        if (sym.split(".").length >= 3) {
+          symconvert2 = sym.replace(".", "%2F");
+        }
+        else {
+          symconvert2 = sym;
+        }
+        var a = document.createElement("A");
+        a.href="http://stockcharts.com/h-sc/ui?s=" + symconvert2;
+        a.target = "_blank";
+        a.appendChild(img);
+        imgdiv.appendChild(a);
+
+        myNode.appendChild(imgdiv);
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200 && this.responseText != "") {
+            $("#StockTable").append(this.responseText);
+          }
+        };
+
+        /*ajax call to get stock data, which was pulled from zacks.com via python script*/
+        xhttp.open("GET", "ajaxstock.php?sym="+sym, true);
+        xhttp.send();
+      }
+    }
+
+  </script>
+  <style>
+  body {font-family: Arial;}
+
+  .tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+  }
+
+  /* Style the buttons inside the tab */
+  .tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+  }
+
+  /* Change background color of buttons on hover */
+  .tab button:hover {
+    background-color: #ddd;
+  }
+
+  /* Create an active/current tablink class */
+  .tab button.active {
+    background-color: #ccc;
+  }
+
+  /* Style the tab content */
+  .tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
+
+  table {
+    font-size: small;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #dddddd;
+  }
+  </style>
+</head>
+<body>
+
+  <div id="Title" class="Title">
+    <h3> My Stocks Monitor</h3>
+  </div>
+
+
+  <div id="TopTab" class="tab">
+  </div>
+
+  <div id="TableDiv" class="TableDiv">
+    <h4> Portofolio Zacks.com Info:</h4>
+    <table id="StockTable" class="StockTable">
+      <tr>
+        <th>Symbol</th>
+        <th>Name</th>
+        <th>Sector</th>
+        <th>Industry</th>
+        <th>Ranking</th>
+        <th>FwdPE</th>
+        <th>EPSGrowth</th>
+        <th>ExpEPSGrowth</th>
+        <th>Yield</th>
+        <th>Beta</th>
+        <th>TaxRate</th>
+      </tr>
+    </table> 
+    </br> 
+  </div>
+
+  <div id="Portfolio" class="Portfolio">
+    <h2> Stock Monitor List</h2>
+  </div>
+
+  
+</body>
+</html> 
+
+
