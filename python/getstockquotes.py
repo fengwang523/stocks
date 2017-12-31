@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, date, time
 import getzacks
+import json
 # -*- coding: utf-8 -*-
 
 def read_sym(symbols):
@@ -30,6 +31,9 @@ def read_sym(symbols):
 
 def main():
   symbols = {}
+  with open('/var/www/stocks/monitor.json', 'r') as f:
+    portfolios = json.load(f)
+  portfolios["Movers"] = []
   read_sym(symbols)
   today = date.today()
   year = timedelta(days=365)
@@ -93,8 +97,13 @@ def main():
     elif (MACD < MACD14):
       continue
 
+    portfolios["Movers"].append(sym)
     print "%s;%.2f;%.4f;%.4f;%.4f;%.4f;%.4f;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s" %(sym,pricelast,daychange,weekchange,twoweekchange,monthchange,yearchange,security,sector,industry,ranking,fwdPE,EPSGrowth,expEPSGrowth,dividendYield,beta,taxRate)
-  
+
+  with open('/var/www/stocks/test.json', 'w') as f:
+   json.dump(portfolios, f, indent=2)
+   f.write('\n')
+    
 if __name__== "__main__":
   main()
 

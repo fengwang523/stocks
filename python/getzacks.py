@@ -150,7 +150,7 @@ def main():
   symbols = {}
   get_sp500_sym(symbols)
   get_qqq_sym(symbols)
-  fh=open('symbols.txt', 'w')
+  fh=open('/var/www/stocks/symbols.txt', 'w')
   for sym, sym_dict in symbols.iteritems():
     data=[]
     data = get_zacks(sym)

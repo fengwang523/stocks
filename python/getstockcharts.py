@@ -4,23 +4,18 @@ import requests
 import re
 import bs4
 import urllib
+import json
 # -*- coding: utf-8 -*-
 
-def get_portfolios(listfile,portfolios):
-  with open(listfile) as f:
-    for line in f.readlines():
-      searched = re.search(r"^\s*\[\s*(\S.+?)\s*\]\s*$", line,re.M|re.I)
-      if searched:
-        portfolio = searched.group(1)
-        portfolios[portfolio] = []
-      searched  = re.search(r"^ +(\S+)\s*$", line)
-      if searched:
-        sym=searched.group(1)
-        portfolios[portfolio].append(sym)
+def get_portfolios(jsonfile):
+  with open(jsonfile) as f:
+    portfolios = json.load(f)
+  return portfolios
 
 def get_chart(sym):
   user_agent = {'User-agent': 'Mozilla/5.0'}
-  sym = sym.replace("/", "%2F")
+  if sym.count('.') >= 2:
+    sym = sym.replace(".", "%2F", 1)
   url = "http://stockcharts.com/h-sc/ui?s=" + sym
   response  = requests.get(url, headers = user_agent)
   if response.status_code != 200:
@@ -41,8 +36,9 @@ def get_chart(sym):
 def main():
   portfolios = {}
   symbols = {}
-  listfile = '/var/www/stocks/monitor.list';
-  get_portfolios(listfile, portfolios)
+  jsonfile = '/var/www/stocks/monitor.json'
+  portfolios = get_portfolios(jsonfile)
+  print json.dumps(portfolios)
   for portfolio, sym_list in portfolios.iteritems():
     print portfolio, sym_list
     for sym in sym_list:
